@@ -1,29 +1,23 @@
 # coding:utf-8
-from flask import Flask 
-from flask import request	
-from flask import render_template
+from flask import Flask, session, redirect, url_for, request, render_template, flash
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_script import Manager
 from datetime import datetime
+from flask_wtf import Form
+from wtforms import StringField, SubmitField
+from wtforms.validators import Required
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'hard to guess string'
+
 manager = Manager(app)
 bootstrap = Bootstrap(app)
 moment = Moment(app)
 
-@app.route('/')
-def index():
-	return render_template("index.html", current_time=datetime.utcnow())
-
-@app.route('/user/<name>')
-def welcome(name):
-    return render_template ("user.html", name=name)
-
-@app.route('/user-agent')
-def Ua():
-	user_agent = request.headers.get("User-Agent")
-	return render_template("user-agent.html", user_agent=user_agent, current_time=datetime.utcnow())
+class NameForm(Form):
+	name = StringField('What is your name?', validators=[Required()])
+	submit = SubmitField('Submit')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -32,6 +26,24 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
 	return render_template("500.html"),500
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+	form = NameForm()
+	if form.validate_on_submit():
+		session['name'] = form.name.data
+		return redirect(url_for('index'))
+	return render_template("index.html", form=form, name=session.get('name'), current_time=datetime.utcnow())
+
+@app.route('/user/<name>')
+def welcome(name):
+    return render_template ("user.html", name=name)
+
+@app.route('/user-agent')
+def UserAnget():
+	user_agent = request.headers.get("User-Agent")
+	return render_template("user-agent.html", user_agent=user_agent, current_time=datetime.utcnow())
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="127.0.0.1")
