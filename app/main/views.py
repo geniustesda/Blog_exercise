@@ -28,7 +28,7 @@ def index():
                            form=form, name=session.get('name'),
                            known=session.get('known', False), current_time=datetime.utcnow())
 
-@main.route('/user_agent')
+@main.route('/user-agent')
 def UserAgent():
     user_agent = request.headers.get('User-Agent')
     return render_template('user-agent.html', user_agent=user_agent, current_time=datetime.utcnow())
